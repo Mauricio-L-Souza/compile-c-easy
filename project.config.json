@@ -1,0 +1,14 @@
+{
+	"name": "Compile easy",
+	"debug_name": "debug",
+	"compile_name": "compile-c-easy",
+	"compile_folder": "compile",
+	"debug_folder": "debug",
+	"gcc_path": "/usr/bin/gcc",
+	"main_file": "main.c",
+	"includes": [
+		"includes/arrays.c",
+		"includes/tiny-json.c",
+		"includes/project-config.c"
+	]
+}
