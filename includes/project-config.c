@@ -165,26 +165,44 @@ void getMainFile(ProjectConfig *self) {
   self->mainFile = (char *)json_getValue(property);
 }
 
+int appendArgsList(char *property) {
+  json_t const *propertyList = json_getProperty(projectConfigJson, property);
+
+  if (!propertyList) {
+    return 4;
+  }
+
+  if (JSON_ARRAY != json_getType(propertyList)) {
+    return 3;
+  }
+
+  json_t const *propertyItem;
+  for (propertyItem = json_getChild(propertyList); propertyItem != 0;
+       propertyItem = json_getSibling(propertyItem)) {
+
+    char *value = (char *)json_getValue(propertyItem);
+
+    if (JSON_TEXT == json_getType(propertyItem)) {
+      arguments.push(&arguments, value);
+    }
+  }
+
+  return 0;
+}
+
 void generateArgs(ProjectConfig *self, int forDebug) {
-  json_t const *includesList = json_getProperty(projectConfigJson, "includes");
-  if (!includesList || JSON_ARRAY != json_getType(includesList)) {
+  arguments.push(&arguments, self->gccPath);
+  arguments.push(&arguments, self->mainFile);
+
+  int includesListError = appendArgsList("includes");
+  if (includesListError == 4) {
     puts("Error, the includes list property is not found.");
     return;
   }
 
-  arguments.push(&arguments, self->gccPath);
-
-  arguments.push(&arguments, self->mainFile);
-
-  json_t const *includeItem;
-  for (includeItem = json_getChild(includesList); includeItem != 0;
-       includeItem = json_getSibling(includeItem)) {
-
-    char *value = (char *)json_getValue(includeItem);
-
-    if (JSON_TEXT == json_getType(includeItem)) {
-      arguments.push(&arguments, value);
-    }
+  if (includesListError == 3) {
+    puts("Error, the includes property needs to be an array.");
+    return;
   }
 
   arguments.push(&arguments, "-o");
@@ -201,6 +219,13 @@ void generateArgs(ProjectConfig *self, int forDebug) {
   }
 
   arguments.push(&arguments, output.obj);
+
+  int argumentsListError = appendArgsList("arguments");
+
+  if (argumentsListError == 3) {
+    puts("Error, the arguments property needs to be an array.");
+    return;
+  }
 
   int lastIndex = arguments.push(&arguments, "");
 
